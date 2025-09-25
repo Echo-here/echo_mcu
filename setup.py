@@ -1,0 +1,27 @@
+from setuptools import setup
+
+package_name = 'echo_mcu'
+
+setup(
+    name=package_name,
+    version='0.0.1',
+    packages=[package_name],
+    install_requires=['setuptools'],
+    zip_safe=True,
+    maintainer='bitbyte08',
+    maintainer_email='me@bitworkspace.kr',
+    description='MCU serial interface',
+    license='BSD',
+    entry_points={
+        'console_scripts': [
+            'cmd_node = echo_mcu.cmd_node:main',
+            'odom_node = echo_mcu.odom_node:main',
+            'serial_node = echo_mcu.serial_node:main',
+            'tf_node=echo_mcu.tf_node:main'
+        ],
+    },
+    data_files=[
+        ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
+        ('share/' + package_name, ['package.xml']),
+    ],
+)
