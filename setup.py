@@ -1,4 +1,5 @@
 from setuptools import setup
+from glob import glob
 
 package_name = 'echo_mcu'
 
@@ -12,6 +13,11 @@ setup(
     maintainer_email='me@bitworkspace.kr',
     description='MCU serial interface',
     license='BSD',
+    tests_require=['pytest'],
+    data_files=[
+        ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
+        ('share/' + package_name, ['package.xml']),
+    ],
     entry_points={
         'console_scripts': [
             'cmd_node = echo_mcu.cmd_node:main',
@@ -20,8 +26,4 @@ setup(
             'tf_node=echo_mcu.tf_node:main'
         ],
     },
-    data_files=[
-        ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
-        ('share/' + package_name, ['package.xml']),
-    ],
 )
