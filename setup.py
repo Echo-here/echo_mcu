@@ -12,7 +12,7 @@ setup(
     maintainer='bitbyte08',
     maintainer_email='me@bitworkspace.kr',
     description='MCU serial interface',
-    license='BSD',
+    license='MIT',
     tests_require=['pytest'],
     data_files=[
         ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
