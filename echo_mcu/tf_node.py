@@ -13,18 +13,18 @@ class TFNode(Node):
         self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
 
     def odom_callback(self, msg):
-         # TF (odom → base_link)
+    # TF (odom → base_link)
         tf = TransformStamped()
         tf.header.stamp = msg.header.stamp
         tf.header.frame_id = 'odom'
         tf.child_frame_id = 'base_link'
-        tf.transform.translation.x = self.x
-        tf.transform.translation.y = 0.0
-        tf.transform.translation.z = 0.0
+        tf.transform.translation.x = msg.pose.pose.position.x
+        tf.transform.translation.y = msg.pose.pose.position.y
+        tf.transform.translation.z = msg.pose.pose.position.z
         tf.transform.rotation = msg.pose.pose.orientation
         self.tf_broadcaster.sendTransform(tf)
 
-        # ✅ TF (base_link → laser)
+        # TF (base_link → laser)
         tf2 = TransformStamped()
         tf2.header.stamp = msg.header.stamp
         tf2.header.frame_id = 'base_link'
@@ -34,6 +34,7 @@ class TFNode(Node):
         tf2.transform.translation.z = 0.2  # 약간 띄운 높이
         tf2.transform.rotation.w = 1.0
         self.tf_broadcaster.sendTransform(tf2)
+
 
 def main(args=None):
     rclpy.init(args=args)
