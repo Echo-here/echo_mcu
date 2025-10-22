@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
+from std_msgs.msg import String
 from nav_msgs.msg import Odometry
-from std_msgs.msg import Int32MultiArray
-import math
 from geometry_msgs.msg import Quaternion
 from tf_transformations import quaternion_from_euler
+import math
 
 class OdomNode(Node):
     def __init__(self):
@@ -26,12 +26,17 @@ class OdomNode(Node):
         # 퍼블리셔
         self.odom_pub = self.create_publisher(Odometry, '/odom', 10)
 
-        # 서브스크라이버
-        self.create_subscription(Int32MultiArray, '/encoder_counts', self.encoder_callback, 10)
+        # 구독: MCU에서 CSV 형식 엔코더 값 수신
+        self.create_subscription(String, '/mcu_rx', self.mcu_callback, 10)
 
-    def encoder_callback(self, msg):
-        left = msg.data[0]
-        right = msg.data[1]
+    def mcu_callback(self, msg: String):
+        try:
+            left_str, right_str = msg.data.split(',')
+            left = int(left_str)
+            right = int(right_str)
+        except Exception as e:
+            self.get_logger().warn(f"Failed to parse MCU CSV: {msg.data}")
+            return
 
         if self.prev_left is None:
             self.prev_left = left
@@ -53,7 +58,6 @@ class OdomNode(Node):
         self.y += d_center * math.sin(self.theta)
 
         now = self.get_clock().now().to_msg()
-
         odom = Odometry()
         odom.header.stamp = now
         odom.header.frame_id = 'odom'
@@ -67,12 +71,14 @@ class OdomNode(Node):
 
         self.odom_pub.publish(odom)
 
+
 def main(args=None):
     rclpy.init(args=args)
     node = OdomNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
