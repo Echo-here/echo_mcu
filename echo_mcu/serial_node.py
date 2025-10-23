@@ -27,7 +27,8 @@ class SerialNode(Node):
         self.tx_callback(init_msg)
 
     def tx_callback(self, msg: String):
-        self.ser.write((msg.data + '\n').encode('utf-8'))
+        self.ser.write((msg.data+'\n').encode('utf-8'))
+        self.ser.flush()
 
     def read_serial(self):
         while self.ser.in_waiting > 0:
