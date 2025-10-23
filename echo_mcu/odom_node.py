@@ -12,8 +12,8 @@ class OdomNode(Node):
         super().__init__('odom_node')
 
         # 로봇 파라미터
-        self.wheel_radius = 0.03
-        self.pulses_per_rev = 500
+        self.wheel_radius = 0.013
+        self.pulses_per_rev = 68600
         self.wheel_base = 0.15
 
         # 상태 변수
