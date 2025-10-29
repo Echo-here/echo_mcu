@@ -35,7 +35,7 @@ class CmdNode(Node):
 
         self.tx_pub.publish(String(data=cmd))
 
-        self.get_logger().info(f"Publish to MCU: {left_cmd}, {right_cmd}")
+        self.get_logger().info(f"Publish to MCU: {cmd}")
 
 def main(args=None):
     rclpy.init(args=args)

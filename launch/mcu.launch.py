@@ -24,8 +24,8 @@ def generate_launch_description():
         ),
         Node(
             package='echo_mcu',
-            executable='cmd_node',
-            name='cmd_node',
+            executable='cmd_node_v2',
+            name='cmd_node_v2',
             output='screen'
         ),
         Node(
