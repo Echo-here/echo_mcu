@@ -58,7 +58,6 @@ class SerialNode(Node):
                 line = self.ser.readline().decode('utf-8').strip()
                 if line:
                     self.rx_pub.publish(String(data=line))
-                    self.get_logger().info(f"RX: {line}")
             time.sleep(0.001)  # 1ms 쉬고 루프
 
 
