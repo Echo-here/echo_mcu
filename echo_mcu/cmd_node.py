@@ -31,11 +31,9 @@ class CmdNode(Node):
         elif msg.angular.z < 0:
             l_dir, r_dir = 'f', 'b'
 
-        left_cmd = f"l {l_dir} {duty}"
-        right_cmd = f"r {r_dir} {duty}"
+        cmd = f"{l_dir} {duty} {r_dir} {duty}"
 
-        self.tx_pub.publish(String(data=left_cmd))
-        self.tx_pub.publish(String(data=right_cmd))
+        self.tx_pub.publish(String(data=cmd))
 
         self.get_logger().info(f"Publish to MCU: {left_cmd}, {right_cmd}")
 

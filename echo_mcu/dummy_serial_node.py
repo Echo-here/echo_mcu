@@ -33,8 +33,8 @@ class DummySerialNode(Node):
 
     def publish_dummy_data(self):
         # 누적 엔코더 값 증가 (임의의 움직임)
-        self.left_count += random.randint(5, 10)
-        self.right_count += random.randint(5, 10)
+        self.left_count += random.randint(600, 700)
+        #self.right_count += random.randint(5, 10)
 
         # CSV 형식으로 발행
         line = f"{self.left_count},{self.right_count}"

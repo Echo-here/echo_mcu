@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'cmd_node = echo_mcu.cmd_node:main',
+            'cmd_node_v2 = echo_mcu.cmd_node_v2:main',
             'odom_node = echo_mcu.odom_node:main',
             'serial_node = echo_mcu.serial_node:main',
             'dummy_serial_node = echo_mcu.dummy_serial_node:main',
