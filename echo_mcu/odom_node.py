@@ -31,7 +31,7 @@ class OdomNode(Node):
 
     def mcu_callback(self, msg: String):
         try:
-            left_str, right_str = msg.data.split(', ')
+            left_str, right_str = msg.data.split(' ')
             left = int(left_str)
             right = int(right_str)
         except Exception as e:
