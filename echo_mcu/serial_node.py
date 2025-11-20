@@ -55,9 +55,12 @@ class SerialNode(Node):
     def read_serial_loop(self):
         while rclpy.ok():
             if self.ser.in_waiting > 0:
-                line = self.ser.readline().decode('utf-8').strip()
-                if line:
-                    self.rx_pub.publish(String(data=line))
+                try:
+                    line = self.ser.readline().decode('utf-8').strip()
+                    if line:
+                        self.rx_pub.publish(String(data=line))
+                except UnicodeDecodeError as e:
+                    self.get_logger().warning(f"Failed to decode serial data: {e}")
             time.sleep(0.001)  # 1ms 쉬고 루프
 
 
