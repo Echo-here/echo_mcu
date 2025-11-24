@@ -25,7 +25,8 @@ setup(
             'odom_node = echo_mcu.odom_node:main',
             'serial_node = echo_mcu.serial_node:main',
             'dummy_serial_node = echo_mcu.dummy_serial_node:main',
-            'tf_node=echo_mcu.tf_node:main'
+            'tf_node=echo_mcu.tf_node:main',
+            'virtual_odom_node = echo_mcu.virtual_odom_node:main'
         ],
     },
 )
