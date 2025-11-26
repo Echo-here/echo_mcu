@@ -20,8 +20,7 @@ class HybridOdomNode(Node):
 
         # 상태 변수
         self.prev_left = None
-        self.left_total = 0
-
+        self.left_total_delta = 0.0      # 누적 delta_left
         self.fake_right_vel = 0.0
         self.cmd_time = time.time()
 
@@ -39,8 +38,7 @@ class HybridOdomNode(Node):
         # Timer
         self.timer = self.create_timer(0.02, self.update_odom)  # 50Hz odom update
 
-        # 디버그용
-        self.get_logger().info("HybridOdomNode Initialized")
+        self.get_logger().info("HybridOdomNode Initialized (누적형 d_left 적용)")
 
     def cmd_callback(self, msg: Twist):
         v = msg.linear.x
@@ -53,10 +51,13 @@ class HybridOdomNode(Node):
         self.get_logger().debug(f"[CMD] v={v:.3f}, w={w:.3f}, fake_right_vel={v_r:.3f}")
 
     def mcu_callback(self, msg: String):
+        """
+        왼쪽 바퀴만 MCU에서 받아서 delta 누적
+        """
         try:
-            left_str, _ = msg.data.split(',')
+            left_str, _ = msg.data.replace(' ', '').split(',')
             left = int(left_str)
-        except:
+        except Exception as e:
             self.get_logger().warn(f"MCU data parse failed: {msg.data}")
             return
 
@@ -67,20 +68,22 @@ class HybridOdomNode(Node):
         delta_left = left - self.prev_left
         self.prev_left = left
 
-        self.d_left = 2 * math.pi * self.wheel_radius * delta_left / self.pulses_per_rev
+        delta_d_left = 2 * math.pi * self.wheel_radius * delta_left / self.pulses_per_rev
+        self.left_total_delta += delta_d_left  # 누적
 
-        self.get_logger().debug(
-            f"[MCU] left={left}, delta_left={delta_left}, d_left={self.d_left:.6f}"
-        )
+        self.get_logger().debug(f"[MCU] left={left}, delta_left={delta_left}, dL 누적={self.left_total_delta:.6f}")
 
     def update_odom(self):
         now = self.get_clock().now().to_msg()
 
-        d_left = getattr(self, "d_left", 0.0)
+        # 왼쪽 바퀴 누적 이동량
+        d_left = getattr(self, "left_total_delta", 0.0)
 
+        # 오른쪽 바퀴 fake 이동량
         dt = 0.02
         d_right = self.fake_right_vel * dt
 
+        # Differential drive odometry
         d_center = (d_left + d_right) / 2.0
         d_theta = (d_right - d_left) / self.wheel_base
 
@@ -88,11 +91,7 @@ class HybridOdomNode(Node):
         self.x += d_center * math.cos(self.theta)
         self.y += d_center * math.sin(self.theta)
 
-        # 디버그 로그
-        self.get_logger().info(
-            f"[ODOM] dL={d_left:.6f}, dR={d_right:.6f}, x={self.x:.3f}, y={self.y:.3f}, th={self.theta:.3f}"
-        )
-
+        # Odometry message
         odom = Odometry()
         odom.header.frame_id = "odom"
         odom.child_frame_id = "base_link"
@@ -100,13 +99,13 @@ class HybridOdomNode(Node):
 
         odom.pose.pose.position.x = self.x
         odom.pose.pose.position.y = self.y
-
         q = quaternion_from_euler(0, 0, self.theta)
         odom.pose.pose.orientation = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
 
         self.odom_pub.publish(odom)
 
-        self.d_left = 0.0
+        # 누적 delta 소모
+        self.left_total_delta = 0.0
 
 
 def main(args=None):
