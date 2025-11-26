@@ -39,8 +39,7 @@ class CmdVelOdomNode(Node):
 
     def update_odom(self):
         dt = 0.02
-        # 속도 스케일링 (실제 로봇 속도 대비)
-        scale = 0.7  # 50% 정도로 줄임
+        scale = 0.7
         v = self.last_cmd.linear.x * scale
         w = self.last_cmd.angular.z * scale
 
@@ -56,28 +55,30 @@ class CmdVelOdomNode(Node):
         self.x += d_center * math.cos(self.theta)
         self.y += d_center * math.sin(self.theta)
 
-        # Odometry publish
+        # Odometry publish (앞뒤 반전)
         now = self.get_clock().now().to_msg()
         odom = Odometry()
         odom.header.stamp = now
         odom.header.frame_id = 'odom'
         odom.child_frame_id = 'base_link'
-        odom.pose.pose.position.x = self.x
-        odom.pose.pose.position.y = self.y
+
+        # x, y, theta 반전
+        odom.pose.pose.position.x = -self.x
+        odom.pose.pose.position.y = -self.y
         odom.pose.pose.position.z = 0.0
 
-        q = quaternion_from_euler(0, 0, self.theta)
+        q = quaternion_from_euler(0, 0, self.theta + math.pi)  # θ + 180도
         odom.pose.pose.orientation = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
 
         self.odom_pub.publish(odom)
 
-        # TF 브로드캐스트
+        # TF 브로드캐스트도 동일하게 반전
         t = TransformStamped()
         t.header.stamp = now
         t.header.frame_id = 'odom'
         t.child_frame_id = 'base_link'
-        t.transform.translation.x = self.x
-        t.transform.translation.y = self.y
+        t.transform.translation.x = -self.x
+        t.transform.translation.y = -self.y
         t.transform.translation.z = 0.0
         t.transform.rotation = odom.pose.pose.orientation
 
