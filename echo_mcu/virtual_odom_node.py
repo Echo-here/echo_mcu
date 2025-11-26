@@ -16,7 +16,7 @@ class HybridOdomNode(Node):
         # 로봇 파라미터
         self.wheel_radius = 0.065        # 130mm diameter
         self.pulses_per_rev = 68600      # confirmed PPR
-        self.wheel_base = 0.23           # later calibrate
+        self.wheel_base = 0.3           # later calibrate
 
         # 상태 변수
         self.prev_left = None
