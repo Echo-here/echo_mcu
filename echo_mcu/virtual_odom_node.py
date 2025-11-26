@@ -2,55 +2,47 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist, Quaternion, TransformStamped
+from geometry_msgs.msg import Quaternion, Twist
 from tf_transformations import quaternion_from_euler
-from tf2_ros import TransformBroadcaster
 import math
 
-class CmdVelOdomNode(Node):
+class OdomNode(Node):
     def __init__(self):
-        super().__init__('cmdvel_odom_node')
+        super().__init__('odom_node')
 
         # 로봇 파라미터
-        self.wheel_base = 0.3  # 바퀴 사이 간격 (m)
+        self.wheel_base = 0.15  # 로봇 바퀴 간 거리(m)
+
+        # 상태 변수
         self.x = 0.0
         self.y = 0.0
         self.theta = 0.0
+        self.last_cmd = Twist()
 
-        # 좌/우 바퀴 가상 거리
-        self.d_left = 0.0
-        self.d_right = 0.0
+        # 속도 스케일링 (실제 로봇과 맞추기)
+        self.scale_linear = 0.5   # 직진 속도 보정
+        self.scale_angular = 0.6  # 회전 속도 보정
 
-        # 퍼블리셔 & TF 브로드캐스터
+        # 퍼블리셔
         self.odom_pub = self.create_publisher(Odometry, '/odom', 10)
-        self.tf_broadcaster = TransformBroadcaster(self)
 
-        # cmd_vel 구독
+        # 구독: cmd_vel
         self.create_subscription(Twist, '/cmd_vel', self.cmd_callback, 10)
 
-        # Timer 50Hz
-        self.timer = self.create_timer(0.02, self.update_odom)
-        self.last_cmd = Twist()  # 마지막 cmd_vel 저장
-
-        self.get_logger().info("CmdVelOdomNode Initialized")
+        # 타이머
+        self.timer = self.create_timer(0.02, self.update_odom)  # 50Hz
 
     def cmd_callback(self, msg: Twist):
         self.last_cmd = msg
 
     def update_odom(self):
-        dt = 0.02
-        v = self.last_cmd.linear.x
-        w = self.last_cmd.angular.z
+        dt = 0.02  # 50Hz
+        v = self.last_cmd.linear.x * self.scale_linear
+        w = self.last_cmd.angular.z * self.scale_angular
 
-        # 좌/우 바퀴 거리 계산
-        self.d_left  = (v - w * self.wheel_base / 2.0) * dt
-        self.d_right = (v + w * self.wheel_base / 2.0) * dt
-
-        # 중심 이동 & 회전
-        d_center = (self.d_left + self.d_right)/2.0
-        delta_theta = (self.d_right - self.d_left)/self.wheel_base
-
-        self.theta += delta_theta
+        # 좌표 계산
+        self.theta += w * dt
+        d_center = v * dt
         self.x += d_center * math.cos(self.theta)
         self.y += d_center * math.sin(self.theta)
 
@@ -69,21 +61,9 @@ class CmdVelOdomNode(Node):
 
         self.odom_pub.publish(odom)
 
-        # TF 브로드캐스트
-        t = TransformStamped()
-        t.header.stamp = now
-        t.header.frame_id = 'odom'
-        t.child_frame_id = 'base_link'
-        t.transform.translation.x = self.x
-        t.transform.translation.y = self.y
-        t.transform.translation.z = 0.0
-        t.transform.rotation = odom.pose.pose.orientation
-
-        self.tf_broadcaster.sendTransform(t)
-
 def main(args=None):
     rclpy.init(args=args)
-    node = CmdVelOdomNode()
+    node = OdomNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
