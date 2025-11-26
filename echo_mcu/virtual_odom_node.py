@@ -29,7 +29,7 @@ class CmdVelOdomNode(Node):
         self.create_subscription(Twist, '/cmd_vel', self.cmd_callback, 10)
 
         # Timer 50Hz
-        self.timer = self.create_timer(0.02, self.update_odom)
+        self.timer = self.create_timer(0.1, self.update_odom)
         self.last_cmd = Twist()  # 마지막 cmd_vel 저장
 
         self.get_logger().info("CmdVelOdomNode Initialized")
@@ -38,7 +38,7 @@ class CmdVelOdomNode(Node):
         self.last_cmd = msg
 
     def update_odom(self):
-        dt = 0.02
+        dt = 0.1
         scale = 0.7
         v = self.last_cmd.linear.x * scale
         w = self.last_cmd.angular.z * scale
@@ -67,7 +67,7 @@ class CmdVelOdomNode(Node):
         odom.pose.pose.position.y = self.y
         odom.pose.pose.position.z = 0.0
 
-        q = quaternion_from_euler(0, 0, self.theta + math.pi)  # θ + 180도
+        q = quaternion_from_euler(0, 0, self.theta)
         odom.pose.pose.orientation = Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
 
         self.odom_pub.publish(odom)
@@ -77,8 +77,8 @@ class CmdVelOdomNode(Node):
         t.header.stamp = now
         t.header.frame_id = 'odom'
         t.child_frame_id = 'base_link'
-        t.transform.translation.x = -self.x
-        t.transform.translation.y = -self.y
+        t.transform.translation.x = self.x
+        t.transform.translation.y = self.y
         t.transform.translation.z = 0.0
         t.transform.rotation = odom.pose.pose.orientation
 
