@@ -6,6 +6,7 @@ from geometry_msgs.msg import Twist, Quaternion, TransformStamped
 from tf_transformations import quaternion_from_euler
 from tf2_ros import TransformBroadcaster
 import math
+import os
 
 class CmdVelOdomNode(Node):
     def __init__(self):
@@ -21,6 +22,10 @@ class CmdVelOdomNode(Node):
         self.d_left = 0.0
         self.d_right = 0.0
 
+        # scale을 환경변수로 읽기 (기본값 0.7)
+        self.scale = float(os.environ.get("ODOM_SCALE", "0.7"))
+        self.get_logger().info(f"Using ODOM_SCALE = {self.scale}")
+
         # 퍼블리셔 & TF 브로드캐스터
         self.odom_pub = self.create_publisher(Odometry, '/odom', 10)
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -28,41 +33,39 @@ class CmdVelOdomNode(Node):
         # cmd_vel 구독
         self.create_subscription(Twist, '/cmd_vel', self.cmd_callback, 10)
 
-        # Timer 50Hz
+        # Timer 10Hz
         self.timer = self.create_timer(0.1, self.update_odom)
         self.last_cmd = Twist()  # 마지막 cmd_vel 저장
 
-        self.get_logger().info("CmdVelOdomNode Initialized")
+        self.get_logger().info("CmdVelOdomNode Initialized (10Hz)")
 
     def cmd_callback(self, msg: Twist):
         self.last_cmd = msg
 
     def update_odom(self):
-        dt = 0.1
-        scale = 0.7
-        v = self.last_cmd.linear.x * scale
-        w = self.last_cmd.angular.z * scale
+        dt = 0.1  # Timer 주기와 동일
+        v = self.last_cmd.linear.x * self.scale
+        w = self.last_cmd.angular.z * self.scale
 
         # 좌/우 바퀴 거리 계산
         self.d_left  = (v - w * self.wheel_base / 2.0) * dt
         self.d_right = (v + w * self.wheel_base / 2.0) * dt
 
         # 중심 이동 & 회전
-        d_center = (self.d_left + self.d_right)/2.0
-        delta_theta = (self.d_right - self.d_left)/self.wheel_base
+        d_center = (self.d_left + self.d_right) / 2.0
+        delta_theta = (self.d_right - self.d_left) / self.wheel_base
 
         self.theta += delta_theta
         self.x += d_center * math.cos(self.theta)
         self.y += d_center * math.sin(self.theta)
 
-        # Odometry publish (앞뒤 반전)
+        # Odometry publish
         now = self.get_clock().now().to_msg()
         odom = Odometry()
         odom.header.stamp = now
         odom.header.frame_id = 'odom'
         odom.child_frame_id = 'base_link'
 
-        # x, y, theta 반전
         odom.pose.pose.position.x = self.x
         odom.pose.pose.position.y = self.y
         odom.pose.pose.position.z = 0.0
@@ -72,7 +75,7 @@ class CmdVelOdomNode(Node):
 
         self.odom_pub.publish(odom)
 
-        # TF 브로드캐스트도 동일하게 반전
+        # TF 브로드캐스트
         t = TransformStamped()
         t.header.stamp = now
         t.header.frame_id = 'odom'
