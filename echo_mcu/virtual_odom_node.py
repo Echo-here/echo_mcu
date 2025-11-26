@@ -39,23 +39,22 @@ class HybridOdomNode(Node):
         # Timer
         self.timer = self.create_timer(0.02, self.update_odom)  # 50Hz odom update
 
+        # 디버그용
+        self.get_logger().info("HybridOdomNode Initialized")
+
     def cmd_callback(self, msg: Twist):
-        """
-        오른쪽 엔코더 고장 → cmd_vel 로부터 예상 우측 바퀴 속도 계산
-        """
         v = msg.linear.x
         w = msg.angular.z
 
-        v_r = v + (self.wheel_base / 2.0) * w  # right wheel linear speed
+        v_r = v + (self.wheel_base / 2.0) * w
         self.fake_right_vel = v_r
         self.cmd_time = time.time()
 
+        self.get_logger().debug(f"[CMD] v={v:.3f}, w={w:.3f}, fake_right_vel={v_r:.3f}")
+
     def mcu_callback(self, msg: String):
-        """
-        왼쪽 바퀴만 MCU에서 받아온다.
-        """
         try:
-            left_str, _ = msg.data.split(',')   # 오른쪽 엔코더는 무시
+            left_str, _ = msg.data.split(',')
             left = int(left_str)
         except:
             self.get_logger().warn(f"MCU data parse failed: {msg.data}")
@@ -68,23 +67,20 @@ class HybridOdomNode(Node):
         delta_left = left - self.prev_left
         self.prev_left = left
 
-        # 실제 거리 계산
         self.d_left = 2 * math.pi * self.wheel_radius * delta_left / self.pulses_per_rev
 
+        self.get_logger().debug(
+            f"[MCU] left={left}, delta_left={delta_left}, d_left={self.d_left:.6f}"
+        )
+
     def update_odom(self):
-        """
-        왼쪽 엔코더(real) + 오른쪽 바퀴(fake from cmd_vel) 로 odom 생성
-        """
         now = self.get_clock().now().to_msg()
 
-        # 왼쪽 바퀴 이동량 (엔코더)
         d_left = getattr(self, "d_left", 0.0)
 
-        # 오른쪽 바퀴 fake 이동량
         dt = 0.02
         d_right = self.fake_right_vel * dt
 
-        # Differential drive odometry
         d_center = (d_left + d_right) / 2.0
         d_theta = (d_right - d_left) / self.wheel_base
 
@@ -92,7 +88,11 @@ class HybridOdomNode(Node):
         self.x += d_center * math.cos(self.theta)
         self.y += d_center * math.sin(self.theta)
 
-        # Odometry message
+        # 디버그 로그
+        self.get_logger().info(
+            f"[ODOM] dL={d_left:.6f}, dR={d_right:.6f}, x={self.x:.3f}, y={self.y:.3f}, th={self.theta:.3f}"
+        )
+
         odom = Odometry()
         odom.header.frame_id = "odom"
         odom.child_frame_id = "base_link"
@@ -106,7 +106,6 @@ class HybridOdomNode(Node):
 
         self.odom_pub.publish(odom)
 
-        # 값 reset
         self.d_left = 0.0
 
 
