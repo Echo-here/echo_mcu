@@ -46,7 +46,7 @@ class CmdNode(Node):
         l_dir = 'f' if v_l >= 0 else 'b'
         r_dir = 'f' if v_r >= 0 else 'b'
 
-        cmd = f"{l_dir} {duty_l} {r_dir} {duty_r}"
+        cmd = f"{r_dir} {duty_r} {l_dir} {duty_l}"
         self.tx_pub.publish(String(data=cmd))
         self.get_logger().info(f"v={v:.2f}, w={w:.2f} -> {cmd}")
 
