@@ -40,7 +40,7 @@ class CmdVelOdomNode(Node):
     def update_odom(self):
         dt = 0.02
         # 속도 스케일링 (실제 로봇 속도 대비)
-        scale = 0.5  # 50% 정도로 줄임
+        scale = 0.05  # 50% 정도로 줄임
         v = self.last_cmd.linear.x * scale
         w = self.last_cmd.angular.z * scale
 
