@@ -39,8 +39,10 @@ class CmdVelOdomNode(Node):
 
     def update_odom(self):
         dt = 0.02
-        v = self.last_cmd.linear.x
-        w = self.last_cmd.angular.z
+        # 속도 스케일링 (실제 로봇 속도 대비)
+        scale = 0.1  # 10% 정도로 줄임
+        v = self.last_cmd.linear.x * scale
+        w = self.last_cmd.angular.z * scale
 
         # 좌/우 바퀴 거리 계산
         self.d_left  = (v - w * self.wheel_base / 2.0) * dt
