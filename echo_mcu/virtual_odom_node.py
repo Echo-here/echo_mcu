@@ -63,8 +63,8 @@ class CmdVelOdomNode(Node):
         odom.child_frame_id = 'base_link'
 
         # x, y, theta 반전
-        odom.pose.pose.position.x = -self.x
-        odom.pose.pose.position.y = -self.y
+        odom.pose.pose.position.x = self.x
+        odom.pose.pose.position.y = self.y
         odom.pose.pose.position.z = 0.0
 
         q = quaternion_from_euler(0, 0, self.theta + math.pi)  # θ + 180도
