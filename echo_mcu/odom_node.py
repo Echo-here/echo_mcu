@@ -29,16 +29,16 @@ class OdomNode(Node):
         self.latest_right = None
 
         # 퍼블리셔 & TF 브로드캐스터
-        self.odom_pub = self.create_publisher(Odometry, '/odom', 50)
+        self.odom_pub = self.create_publisher(Odometry, '/odom', 10)
         self.tf_broadcaster = TransformBroadcaster(self)
 
         # MCU 엔코더 구독 (큐 50)
-        self.create_subscription(String, '/mcu_rx', self.mcu_callback, 50)
+        self.create_subscription(String, '/mcu_rx', self.mcu_callback, 20)
 
         # Timer: 10Hz → 0.1초 주기
         self.timer = self.create_timer(0.1, self.publish_odom)
 
-        self.get_logger().info("OdomNode initialized (10Hz, queue_size=50)")
+        self.get_logger().info("OdomNode initialized (10Hz, queue_size=20)")
 
     def mcu_callback(self, msg: String):
         try:
