@@ -10,7 +10,7 @@ import math
 
 class OdomNode(Node):
     def __init__(self):
-        super().__init__('odom_node')
+        super().__init__('odom_node_50hz')
 
         # 로봇 파라미터
         self.wheel_radius = 0.065
@@ -29,16 +29,16 @@ class OdomNode(Node):
         self.latest_right = None
 
         # 퍼블리셔 & TF 브로드캐스터
-        self.odom_pub = self.create_publisher(Odometry, '/odom', 20)
+        self.odom_pub = self.create_publisher(Odometry, '/odom', 50)
         self.tf_broadcaster = TransformBroadcaster(self)
 
-        # MCU 엔코더 구독 (큐 20)
-        self.create_subscription(String, '/mcu_rx', self.mcu_callback, 20)
+        # MCU 엔코더 구독 (큐 50)
+        self.create_subscription(String, '/mcu_rx', self.mcu_callback, 50)
 
-        # Timer: 10Hz
-        self.timer = self.create_timer(0.1, self.publish_odom)
+        # Timer: 50Hz → 0.02초 주기
+        self.timer = self.create_timer(0.02, self.publish_odom)
 
-        self.get_logger().info("OdomNode initialized (10Hz, queue_size=20)")
+        self.get_logger().info("OdomNode initialized (50Hz, queue_size=50)")
 
     def mcu_callback(self, msg: String):
         try:
