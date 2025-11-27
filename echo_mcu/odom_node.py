@@ -44,7 +44,7 @@ class OdomNode(Node):
         try:
             left_str, right_str = msg.data.split(', ')
             self.latest_left = int(left_str)
-            self.latest_right = int(right_str)
+            self.latest_right = int(left_str)
         except Exception as e:
             self.get_logger().warn(f"Failed to parse MCU CSV: {msg.data}")
 
