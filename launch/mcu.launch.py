@@ -30,8 +30,8 @@ def generate_launch_description():
         ),
         Node(
             package='echo_mcu',
-            executable='virtual_odom_node',
-            name='virtual_odom_node',
+            executable='odom_node',
+            name='odom_node',
             output='screen'
         ),
         Node(
