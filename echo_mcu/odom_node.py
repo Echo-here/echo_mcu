@@ -35,10 +35,10 @@ class OdomNode(Node):
         # MCU 엔코더 구독 (큐 50)
         self.create_subscription(String, '/mcu_rx', self.mcu_callback, 50)
 
-        # Timer: 50Hz → 0.02초 주기
-        self.timer = self.create_timer(0.02, self.publish_odom)
+        # Timer: 10Hz → 0.1초 주기
+        self.timer = self.create_timer(0.1, self.publish_odom)
 
-        self.get_logger().info("OdomNode initialized (50Hz, queue_size=50)")
+        self.get_logger().info("OdomNode initialized (10Hz, queue_size=50)")
 
     def mcu_callback(self, msg: String):
         try:
