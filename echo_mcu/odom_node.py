@@ -12,9 +12,9 @@ class OdomNode(Node):
         super().__init__('odom_node')
 
         # 로봇 파라미터
-        self.wheel_radius = 0.013
+        self.wheel_radius = 0.065
         self.pulses_per_rev = 68600
-        self.wheel_base = 0.15
+        self.wheel_base = 0.3
 
         # 상태 변수
         self.prev_left = None
@@ -33,7 +33,7 @@ class OdomNode(Node):
         try:
             left_str, right_str = msg.data.split(', ')
             left = int(left_str)
-            right = int(right_str)
+            right = int(left_str)
         except Exception as e:
             self.get_logger().warn(f"Failed to parse MCU CSV: {msg.data}")
             return
